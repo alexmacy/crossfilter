@@ -1,221 +1,156 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <title>Crossfilter</title>
+
 <style>
+  body {
+    font-family: "Helvetica Neue";
+    margin: 40px auto;
+    width: 960px;
+    min-height: 2000px;
+  }
 
-@import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz:400,700);
+  #body {
+    position: relative;
+  }
 
-body {
-  font-family: "Helvetica Neue";
-  margin: 40px auto;
-  width: 960px;
-  min-height: 2000px;
-}
+  #body > p {
+    line-height: 1.5em;
+    width: 640px;
+    text-rendering: optimizeLegibility;
+  }
 
-#body {
-  position: relative;
-}
+  #charts {
+    padding: 10px 0;
+  }
 
-footer {
-  padding: 2em 0 1em 0;
-  font-size: 12px;
-}
+  .chart {
+    display: inline-block;
+    height: 151px;
+    margin-bottom: 20px;
+  }
 
-h1 {
-  font-size: 96px;
-  margin-top: .3em;
-  margin-bottom: 0;
-}
+  .reset {
+    padding-left: 1em;
+    font-size: smaller;
+    color: #ccc;
+  }
 
-h1 + h2 {
-  margin-top: 0;
-}
+  .background.bar {
+    fill: #ccc;
+  }
 
-h2 {
-  font-weight: 400;
-  font-size: 28px;
-}
+  .foreground.bar {
+    fill: steelblue;
+  }
 
-h1, h2 {
-  font-family: "Yanone Kaffeesatz";
-  text-rendering: optimizeLegibility;
-}
+  .brush-handle {
+    fill: #eee;
+    stroke: #666;
+  }
 
-#body > p {
-  line-height: 1.5em;
-  width: 640px;
-  text-rendering: optimizeLegibility;
-}
+  #hour-chart {
+    width: 260px;
+  }
 
-#charts {
-  padding: 10px 0;
-}
+  #delay-chart {
+    width: 230px;
+  }
 
-.chart {
-  display: inline-block;
-  height: 151px;
-  margin-bottom: 20px;
-}
+  #distance-chart {
+    width: 420px;
+  }
 
-.reset {
-  padding-left: 1em;
-  font-size: smaller;
-  color: #ccc;
-}
+  #date-chart {
+    width: 920px;
+  }
 
-.background.bar {
-  fill: #ccc;
-}
+  #flight-list {
+    min-height: 1024px;
+  }
 
-.foreground.bar {
-  fill: steelblue;
-}
+  #flight-list .date,
+  #flight-list .day {
+    margin-bottom: .4em;
+  }
 
-.axis path, .axis line {
-  fill: none;
-  stroke: #000;
-  shape-rendering: crispEdges;
-}
+  #flight-list .flight {
+    line-height: 1.5em;
+    background: #eee;
+    width: 640px;
+    margin-bottom: 1px;
+  }
 
-.axis text {
-  font: 10px sans-serif;
-}
+  #flight-list .time {
+    color: #999;
+  }
 
-.brush rect.extent {
-  fill: steelblue;
-  fill-opacity: .125;
-}
+  #flight-list .flight div {
+    display: inline-block;
+    width: 100px;
+  }
 
-.brush .resize path {
-  fill: #eee;
-  stroke: #666;
-}
+  #flight-list div.distance,
+  #flight-list div.delay {
+    width: 160px;
+    padding-right: 10px;
+    text-align: right;
+  }
 
-#hour-chart {
-  width: 260px;
-}
+  #flight-list .early {
+    color: green;
+  }
 
-#delay-chart {
-  width: 230px;
-}
-
-#distance-chart {
-  width: 420px;
-}
-
-#date-chart {
-  width: 920px;
-}
-
-#flight-list {
-  min-height: 1024px;
-}
-
-#flight-list .date,
-#flight-list .day {
-  margin-bottom: .4em;
-}
-
-#flight-list .flight {
-  line-height: 1.5em;
-  background: #eee;
-  width: 640px;
-  margin-bottom: 1px;
-}
-
-#flight-list .time {
-  color: #999;
-}
-
-#flight-list .flight div {
-  display: inline-block;
-  width: 100px;
-}
-
-#flight-list div.distance,
-#flight-list div.delay {
-  width: 160px;
-  padding-right: 10px;
-  text-align: right;
-}
-
-#flight-list .early {
-  color: green;
-}
-
-aside {
-  position: absolute;
-  left: 740px;
-  font-size: smaller;
-  width: 220px;
-}
-
+  aside {
+    position: absolute;
+    left: 740px;
+    font-size: smaller;
+    width: 220px;
+  }
 </style>
+
+<script src="crossfilter.min.js"></script>
+<script src="d3.v4.min.js"></script>
 
 <div id="body">
 
-<h1>Crossfilter</h1>
+  <div id="charts">
+    <div id="hour-chart" class="chart">
+      <div class="title">Time of Day</div>
+    </div>
+    <div id="delay-chart" class="chart">
+      <div class="title">Arrival Delay (min.)</div>
+    </div>
+    <div id="distance-chart" class="chart">
+      <div class="title">Distance (mi.)</div>
+    </div>
 
-<h2>Fast Multidimensional Filtering for Coordinated Views</h2>
-
-<p><b>Crossfilter</b> is a <a href="https://github.com/crossfilter/crossfilter">JavaScript library</a> for exploring large multivariate datasets in the browser. Crossfilter supports extremely fast (&lt;30ms) interaction with coordinated views, even with datasets containing a million or more records. This version of Crossfilter is a community fork of the <a href="https://github.com/square/crossfilter">original Crossfilter project</a> developed by Square, Inc.
-
-<p>Since most interactions only involve a single dimension, and then only small adjustments are made to the filter values, incremental filtering and reducing is significantly faster than starting from scratch. Crossfilter uses sorted indexes (and a few bit-twiddling hacks) to make this possible, dramatically increasing the perfor&shy;mance of live histograms and top-<i>K</i> lists. For more details on how Crossfilter works, see the <a href="https://github.com/crossfilter/crossfilter/wiki/API-Reference">API reference</a>.
-
-<h2>Example: Airline on-time performance</h2>
-
-<p>The coordinated visualizations below (built with <a href="http://mbostock.github.com/d3/">D3</a>) show nearly a quarter-million flights from early 2001: part of the <a href="http://stat-computing.org/dataexpo/2009/">ASA Data Expo</a> dataset. The dataset is 5.3MB, so it might take a few seconds to download. Click and drag on any chart to filter by the associated dimension. The table beneath shows the eighty most recent flights that match the current filters; these are the <i>details on demand</i>, anecdotal evidence you can use to weigh different hypotheses.
-
-<p>Some questions to consider: How does time-of-day correlate with <a href="javascript:filter([null, [100, 150], null, null])">arrival delay</a>? Are <a href="javascript:filter([null, null, [1700, 2000], null])">longer</a> or <a href="javascript:filter([null, null, [0, 300], null])">shorter</a> flights more likely to arrive early? What happened on <a href="javascript:filter([null, [80, 150], null, [new Date(2001, 0, 12), new Date(2001, 0, 13)]])">January 12</a>? How do flight patterns differ between <a href="javascript:filter([null, null, null, [new Date(2001, 0, 27), new Date(2001, 0, 29)]])">weekends</a> and <a href="javascript:filter([null, null, null, [new Date(2001, 0, 29), new Date(2001, 1, 3)]])">weekdays</a>, or <a href="javascript:filter([[4, 7], null, null, null])">mornings</a> and <a href="javascript:filter([[21, 24], null, null, null])">nights</a>? <a href="https://github.com/square/crossfilter/tree/gh-pages">Fork this example</a> and try your own data!
-
-<div id="charts">
-  <div id="hour-chart" class="chart">
-    <div class="title">Time of Day</div>
+    <div id="date-chart" class="chart">
+      <div class="title">Date</div>
+    </div>
   </div>
-  <div id="delay-chart" class="chart">
-    <div class="title">Arrival Delay (min.)</div>
-  </div>
-  <div id="distance-chart" class="chart">
-    <div class="title">Distance (mi.)</div>
-  </div>
-  <div id="date-chart" class="chart">
-    <div class="title">Date</div>
-  </div>
-</div>
 
-<aside id="totals"><span id="active">-</span> of <span id="total">-</span> flights selected.</aside>
+  <aside id="totals"><span id="active">-</span> of <span id="total">-</span> flights selected.</aside>
 
-<div id="lists">
-  <div id="flight-list" class="list"></div>
-</div>
-
-<footer>
-  <span style="float:right;">
-    Released under the <a href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache License 2.0</a>.
-  </span>
-  Copyright 2012-2015 Square, Inc. and crossfilter contributors.
-</footer>
+  <div id="lists">
+    <div id="flight-list" class="list"></div>
+  </div>
 
 </div>
 
-<a href="https://github.com/crossfilter/crossfilter"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
-
-<script src="crossfilter.v1.min.js"></script>
-<script src="d3.v3.min.js"></script>
 <script>
-
 // (It's CSV, but GitHub Pages only gzip's JSON at the moment.)
 d3.csv("flights-3m.json", function(error, flights) {
 
   // Various formatters.
   var formatNumber = d3.format(",d"),
       formatChange = d3.format("+,d"),
-      formatDate = d3.time.format("%B %d, %Y"),
-      formatTime = d3.time.format("%I:%M %p");
+      formatDate = d3.timeFormat("%B %d, %Y"),
+      formatTime = d3.timeFormat("%I:%M %p");
 
   // A nest operator, for grouping the flight list.
   var nestByDate = d3.nest()
-      .key(function(d) { return d3.time.day(d.date); });
+      .key(function(d) {return d3.timeDay(d.date)});
 
   // A little coercion, since the CSV is untyped.
   flights.forEach(function(d, i) {
@@ -228,45 +163,45 @@ d3.csv("flights-3m.json", function(error, flights) {
   // Create the crossfilter for the relevant dimensions and groups.
   var flight = crossfilter(flights),
       all = flight.groupAll(),
-      date = flight.dimension(function(d) { return d.date; }),
-      dates = date.group(d3.time.day),
-      hour = flight.dimension(function(d) { return d.date.getHours() + d.date.getMinutes() / 60; }),
+      date = flight.dimension(function(d) {return d.date}),
+      dates = date.group(d3.timeDay),
+      hour = flight.dimension(function(d) {return d.date.getHours() + d.date.getMinutes() / 60}),
       hours = hour.group(Math.floor),
-      delay = flight.dimension(function(d) { return Math.max(-60, Math.min(149, d.delay)); }),
-      delays = delay.group(function(d) { return Math.floor(d / 10) * 10; }),
-      distance = flight.dimension(function(d) { return Math.min(1999, d.distance); }),
-      distances = distance.group(function(d) { return Math.floor(d / 50) * 50; });
+      delay = flight.dimension(function(d) {return Math.max(-60, Math.min(149, d.delay))}),
+      delays = delay.group(function(d) {return Math.floor(d / 10) * 10}),
+      distance = flight.dimension(function(d) {return Math.min(1999, d.distance)}),
+      distances = distance.group(function(d) {return Math.floor(d / 50) * 50});
 
   var charts = [
 
     barChart()
         .dimension(hour)
         .group(hours)
-      .x(d3.scale.linear()
-        .domain([0, 24])
-        .rangeRound([0, 10 * 24])),
+        .x(d3.scaleLinear()
+            .domain([0, 24])
+            .rangeRound([0, 10 * 24])),
 
     barChart()
         .dimension(delay)
         .group(delays)
-      .x(d3.scale.linear()
-        .domain([-60, 150])
-        .rangeRound([0, 10 * 21])),
+        .x(d3.scaleLinear()
+            .domain([-60, 150])
+            .rangeRound([0, 10 * 21])),
 
     barChart()
         .dimension(distance)
         .group(distances)
-      .x(d3.scale.linear()
-        .domain([0, 2000])
-        .rangeRound([0, 10 * 40])),
+        .x(d3.scaleLinear()
+            .domain([0, 2000])
+            .rangeRound([0, 10 * 40])),
 
     barChart()
         .dimension(date)
         .group(dates)
-        .round(d3.time.day.round)
-      .x(d3.time.scale()
-        .domain([new Date(2001, 0, 1), new Date(2001, 3, 1)])
-        .rangeRound([0, 10 * 90]))
+        .round(d3.timeDay)
+        .x(d3.scaleTime()
+          .domain([new Date(2001, 0, 1), new Date(2001, 3, 1)])
+          .rangeRound([0, 10 * 90]))
         .filter([new Date(2001, 1, 1), new Date(2001, 2, 1)])
 
   ];
@@ -276,7 +211,6 @@ d3.csv("flights-3m.json", function(error, flights) {
   // We also listen to the chart's brush events to update the display.
   var chart = d3.selectAll(".chart")
       .data(charts)
-      .each(function(chart) { chart.on("brush", renderAll).on("brushend", renderAll); });
 
   // Render the initial lists.
   var list = d3.selectAll(".list")
@@ -300,7 +234,7 @@ d3.csv("flights-3m.json", function(error, flights) {
     d3.select("#active").text(formatNumber(all.value()));
   }
 
-  // Like d3.time.format, but faster.
+  // Like d3.timeFormat, but faster.
   function parseDate(d) {
     return new Date(2001,
         d.substring(0, 2) - 1,
@@ -310,7 +244,7 @@ d3.csv("flights-3m.json", function(error, flights) {
   }
 
   window.filter = function(filters) {
-    filters.forEach(function(d, i) { charts[i].filter(d); });
+    filters.forEach(function(d, i) {charts[i].filter(d)});
     renderAll();
   };
 
@@ -324,47 +258,55 @@ d3.csv("flights-3m.json", function(error, flights) {
 
     div.each(function() {
       var date = d3.select(this).selectAll(".date")
-          .data(flightsByDate, function(d) { return d.key; });
+          .data(flightsByDate, function(d) {return d.key});
+
+      date.exit().remove();
 
       date.enter().append("div")
           .attr("class", "date")
         .append("div")
           .attr("class", "day")
-          .text(function(d) { return formatDate(d.values[0].date); });
+          .text(function(d) {return formatDate(d.values[0].date)})
+        .merge(date);
 
-      date.exit().remove();
 
       var flight = date.order().selectAll(".flight")
-          .data(function(d) { return d.values; }, function(d) { return d.index; });
+          .data(function(d) {return d.values}, function(d) {return d.index});
+
+      flight.exit().remove();
 
       var flightEnter = flight.enter().append("div")
           .attr("class", "flight");
 
       flightEnter.append("div")
           .attr("class", "time")
-          .text(function(d) { return formatTime(d.date); });
+          .text(function(d) {return formatTime(d.date)});
 
       flightEnter.append("div")
           .attr("class", "origin")
-          .text(function(d) { return d.origin; });
+          .text(function(d) {return d.origin});
 
       flightEnter.append("div")
           .attr("class", "destination")
-          .text(function(d) { return d.destination; });
+          .text(function(d) {return d.destination});
 
       flightEnter.append("div")
           .attr("class", "distance")
-          .text(function(d) { return formatNumber(d.distance) + " mi."; });
+          .text(function(d) {return formatNumber(d.distance) + " mi."});
 
       flightEnter.append("div")
           .attr("class", "delay")
-          .classed("early", function(d) { return d.delay < 0; })
-          .text(function(d) { return formatChange(d.delay) + " min."; });
+          .classed("early", function(d) {return d.delay < 0})
+          .text(function(d) {return formatChange(d.delay) + " min."});
 
-      flight.exit().remove();
+      flightEnter.merge(flight);
 
       flight.order();
     });
+  }
+
+  function roundFloat (i) {
+    return Math.round(i / 10) * 10;
   }
 
   function barChart() {
@@ -372,18 +314,21 @@ d3.csv("flights-3m.json", function(error, flights) {
 
     var margin = {top: 10, right: 10, bottom: 20, left: 10},
         x,
-        y = d3.scale.linear().range([100, 0]),
+        y = d3.scaleLinear().range([100, 0]),
         id = barChart.id++,
-        axis = d3.svg.axis().orient("bottom"),
-        brush = d3.svg.brush(),
+        axis = d3.axisBottom(),
+        brush = d3.brushX(),
         brushDirty,
         dimension,
         group,
-        round;
+        round,
+        gBrush;
 
     function chart(div) {
       var width = x.range()[1],
           height = y.range()[0];
+
+      brush.extent([[0, 0], [width, height]])
 
       y.domain([0, group.top(1)[0].value]);
 
@@ -414,7 +359,7 @@ d3.csv("flights-3m.json", function(error, flights) {
           g.selectAll(".bar")
               .data(["background", "foreground"])
             .enter().append("path")
-              .attr("class", function(d) { return d + " bar"; })
+              .attr("class", function(d) {return d + " bar"})
               .datum(group.all());
 
           g.selectAll(".foreground.bar")
@@ -426,25 +371,39 @@ d3.csv("flights-3m.json", function(error, flights) {
               .call(axis);
 
           // Initialize the brush component with pretty resize handles.
-          var gBrush = g.append("g").attr("class", "brush").call(brush);
-          gBrush.selectAll("rect").attr("height", height);
-          gBrush.selectAll(".resize").append("path").attr("d", resizePath);
+          gBrush = g.append("g")
+              .attr("class", "brush")
+              .call(brush);
+
+          gBrush.selectAll(".handle--custom")
+              .data([{type: "w"}, {type: "e"}])
+            .enter().append("path")
+              .attr("class", "brush-handle")
+              .attr("cursor", "ew-resize")
+              .attr("d", resizePath)
+              .style("display", "none")
         }
 
         // Only redraw the brush if set externally.
-        if (brushDirty) {
+        if (brushDirty != false) {
+          var filterVal = brushDirty;
           brushDirty = false;
-          g.selectAll(".brush").call(brush);
-          div.select(".title a").style("display", brush.empty() ? "none" : null);
-          if (brush.empty()) {
+
+          div.select(".title a").style("display", d3.brushSelection(div) ? null : "none");
+
+          if (!filterVal) {
+            g.call(brush)
+
             g.selectAll("#clip-" + id + " rect")
                 .attr("x", 0)
                 .attr("width", width);
+
+            g.selectAll(".brush-handle").style("display", "none")
+            renderAll();
+
           } else {
-            var extent = brush.extent();
-            g.selectAll("#clip-" + id + " rect")
-                .attr("x", x(extent[0]))
-                .attr("width", x(extent[1]) - x(extent[0]));
+            var range = filterVal.map(x)
+            brush.move(gBrush, range)
           }
         }
 
@@ -464,7 +423,7 @@ d3.csv("flights-3m.json", function(error, flights) {
       }
 
       function resizePath(d) {
-        var e = +(d == "e"),
+        var e = +(d.type == "e"),
             x = e ? 1 : -1,
             y = height / 3;
         return "M" + (.5 * x) + "," + y
@@ -479,30 +438,54 @@ d3.csv("flights-3m.json", function(error, flights) {
       }
     }
 
-    brush.on("brushstart.chart", function() {
+    brush.on("start.chart", function() {
+      console.log("start")
       var div = d3.select(this.parentNode.parentNode.parentNode);
       div.select(".title a").style("display", null);
     });
 
     brush.on("brush.chart", function() {
-      var g = d3.select(this.parentNode),
-          extent = brush.extent();
-      if (round) g.select(".brush")
-          .call(brush.extent(extent = extent.map(round)))
-        .selectAll(".resize")
-          .style("display", null);
+      var g = d3.select(this.parentNode);
+      var brushRange = d3.event.selection; // attempt to read range from brush
+      var xRange = x && x.range(); // attempt to read range from x scale
+      var activeRange = brushRange || xRange; // default to x range if no brush range
+
+      var hasRange = activeRange && activeRange.length === 2;
+
+      if (!hasRange) return; // quit early if we don't have a valid range
+
+      // if rounding fn supplied, then snap brush rect to rounded range limits
+      if (round) {
+        if (d3.event.sourceEvent &&
+            d3.event.sourceEvent.type === "mousemove") {
+              d3.select(this).call(brush.move, activeRange.map(round))
+        }
+      }
+
+      // filter the active dimension to the range bounds
+      dimension.filterRange(activeRange.map(x.invert));
+
+      // move brush handles to start and end of range
+      g.selectAll(".brush-handle")
+          .style("display", null)
+          .attr("transform", function(d, i) {
+            return "translate(" + activeRange[i] + ", 0)"
+          });
+
+      // resize sliding window to reflect updated range
       g.select("#clip-" + id + " rect")
-          .attr("x", x(extent[0]))
-          .attr("width", x(extent[1]) - x(extent[0]));
-      dimension.filterRange(extent);
+          .attr("x", activeRange[0])
+          .attr("width", activeRange[1] - activeRange[0]);
+
+      // re-render the other charts accordingly
+      renderAll();
     });
 
-    brush.on("brushend.chart", function() {
-      if (brush.empty()) {
-        var div = d3.select(this.parentNode.parentNode.parentNode);
-        div.select(".title a").style("display", "none");
-        div.select("#clip-" + id + " rect").attr("x", null).attr("width", "100%");
-        dimension.filterAll();
+    brush.on("end.chart", function() {
+      // reset corresponding filter if the brush selection was cleared
+      // (e.g. user "clicked off" the active range)
+      if (!d3.brushSelection(this)) {
+        reset(id);
       }
     });
 
@@ -516,7 +499,6 @@ d3.csv("flights-3m.json", function(error, flights) {
       if (!arguments.length) return x;
       x = _;
       axis.scale(x);
-      brush.x(x);
       return chart;
     };
 
@@ -534,13 +516,13 @@ d3.csv("flights-3m.json", function(error, flights) {
 
     chart.filter = function(_) {
       if (_) {
-        brush.extent(_);
+        chart.gBrush.call(brush.move, _);
         dimension.filterRange(_);
       } else {
-        brush.clear();
+        chart.gBrush.call(brush.move, [0,Infinity]);
         dimension.filterAll();
       }
-      brushDirty = true;
+      brushDirty = _;
       return chart;
     };
 
@@ -552,13 +534,15 @@ d3.csv("flights-3m.json", function(error, flights) {
 
     chart.round = function(_) {
       if (!arguments.length) return round;
-      round = _;
+      round = !!_;
       return chart;
     };
 
-    return d3.rebind(chart, brush, "on");
+    chart.gBrush = function() {
+      return gBrush
+    }
+
+    return chart;
   }
 });
-
 </script>
-
