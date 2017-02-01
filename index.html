@@ -435,7 +435,6 @@ d3.csv("flights-3m.json", function(error, flights) {
     }
 
     brush.on("start.chart", function() {
-      console.log("start")
       var div = d3.select(this.parentNode.parentNode.parentNode);
       div.select(".title a").style("display", null);
     });
@@ -521,13 +520,7 @@ d3.csv("flights-3m.json", function(error, flights) {
     };
 
     chart.filter = function(_) {
-      if (_) {
-        chart.gBrush.call(brush.move, _);
-        dimension.filterRange(_);
-      } else {
-        chart.gBrush.call(brush.move, [0,Infinity]);
-        dimension.filterAll();
-      }
+      if (!_) dimension.filterAll();
       brushDirty = _;
       return chart;
     };
