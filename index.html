@@ -185,7 +185,7 @@
 
 <a href="https://github.com/crossfilter/crossfilter"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
 
-<script src="crossfilter.v1.min.js"></script>
+<script src="crossfilter.min.js"></script>
 <script src="d3.v4.min.js"></script>
 <script>
 // (It's CSV, but GitHub Pages only gzip's JSON at the moment.)
@@ -483,59 +483,43 @@ d3.csv("flights-3m.json", function(error, flights) {
       }
     }
 
-    brush.on("start.chart", function() {
-      var div = d3.select(this.parentNode.parentNode.parentNode);
-      div.select(".title a").style("display", null);
-    });
+    brush.on("brush", function() {  
+      var g = d3.select(this.parentNode),
+          range = d3.event.selection;
 
-    brush.on("brush.chart", function() {
-      var g = d3.select(this.parentNode);
-      var brushRange = d3.event.selection || d3.brushSelection(this); // attempt to read brush range
-      var xRange = x && x.range(); // attempt to read range from x scale
-      var activeRange = brushRange || xRange; // default to x range if no brush range available
-
-      var hasRange = activeRange &&
-                     activeRange.length === 2 &&
-                     !isNaN(activeRange[0]) &&
-                     !isNaN(activeRange[1]);
-
-      if (!hasRange) return; // quit early if we don't have a valid range
-
-      // calculate current brush extents using x scale
-      var extents = activeRange.map(x.invert);
-
-      // if rounding fn supplied, then snap to rounded extents
-      // and move brush rect to reflect rounded range bounds if it was set by user interaction
       if (round) {
-        extents = extents.map(round);
-        activeRange = extents.map(x);
+        range = range ? range.map(function(d) {return Math.round(d/10)*10}) : [x.range()];
 
-        if (d3.event.sourceEvent &&
+        //this snaps the brush's rect to the rounded date
+        if (d3.event.sourceEvent && 
             d3.event.sourceEvent.type === "mousemove") {
-              d3.select(this).call(brush.move, activeRange)
-        }
+              d3.select(this).call(brush.move, range)
+          }
       }
 
-      // move brush handles to start and end of range
-      g.selectAll(".brush-handle")
-          .style("display", null)
-          .attr("transform", function(d, i) {
-            return "translate(" + activeRange[i] + ", 0)"
-          });
+      if (range[1] > range[0]) {        
+        dimension.filterRange(range.map(x.invert));
 
-      // resize sliding window to reflect updated range
-      g.select("#clip-" + id + " rect")
-          .attr("x", activeRange[0])
-          .attr("width", activeRange[1] - activeRange[0]);
+        var div = d3.select(this.parentNode.parentNode.parentNode);
+        div.select(".title a").style("display", null);
 
-      // filter the active dimension to the range extents
-      dimension.filterRange(extents);
+        g.selectAll(".brush-handle")
+            .style("display", null)
+            .attr("transform", function(d, i) {
+              return "translate(" + range[i] + ", 0)"
+            });
 
-      // re-render the other charts accordingly
-      renderAll();
+        g.select("#clip-" + id + " rect")
+            .attr("x", range[0])
+            .attr("width", range[1] - range[0]);
+
+        renderAll()
+      }
+
+
     });
 
-    brush.on("end.chart", function() {
+    brush.on("end", function() {
       // reset corresponding filter if the brush selection was cleared
       // (e.g. user "clicked off" the active range)
       if (!d3.brushSelection(this)) {
