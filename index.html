@@ -135,6 +135,10 @@
     width: 220px;
   }
 
+  .selection {
+    fill: steelblue;
+    fill-opacity: .125;
+  }
 </style>
 
 <div id="body">
@@ -185,12 +189,11 @@
 
 <a href="https://github.com/crossfilter/crossfilter"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub"></a>
 
-<script src="crossfilter.min.js"></script>
-<script src="d3.v4.min.js"></script>
+<script src="crossfilter.v1.min.js"></script>
+<script src="d3.v5.min.js"></script>
 <script>
 // (It's CSV, but GitHub Pages only gzip's JSON at the moment.)
-d3.csv("flights-3m.json", function(error, flights) {
-
+d3.csv("flights-3m.json").then(function(flights) {
   // Various formatters.
   var formatNumber = d3.format(",d"),
       formatChange = d3.format("+,d"),
