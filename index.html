@@ -230,30 +230,30 @@ d3.csv("flights-3m.json").then(function(flights) {
         .dimension(hour)
         .group(hours)
       .x(d3.scaleLinear()
-          .domain([0, 24])
-          .rangeRound([0, 10 * 24])),
+        .domain([0, 24])
+        .rangeRound([0, 10 * 24])),
 
     barChart()
         .dimension(delay)
         .group(delays)
       .x(d3.scaleLinear()
-          .domain([-60, 150])
-          .rangeRound([0, 10 * 21])),
+        .domain([-60, 150])
+        .rangeRound([0, 10 * 21])),
 
     barChart()
         .dimension(distance)
         .group(distances)
       .x(d3.scaleLinear()
-          .domain([0, 2000])
-          .rangeRound([0, 10 * 40])),
+        .domain([0, 2000])
+        .rangeRound([0, 10 * 40])),
 
     barChart()
         .dimension(date)
         .group(dates)
         .round(d3.timeDay.round)
       .x(d3.scaleTime()
-          .domain([new Date(2001, 0, 1), new Date(2001, 3, 1)])
-          .rangeRound([0, 10 * 90]))
+        .domain([new Date(2001, 0, 1), new Date(2001, 3, 1)])
+        .rangeRound([0, 10 * 90]))
         .filter([new Date(2001, 1, 1), new Date(2001, 2, 1)])
 
   ];
@@ -312,8 +312,6 @@ d3.csv("flights-3m.json").then(function(flights) {
       var date = d3.select(this).selectAll(".date")
           .data(flightsByDate, function(d) { return d.key; });
 
-      date.exit().remove();
-
       date.enter().append("div")
           .attr("class", "date")
         .append("div")
@@ -321,11 +319,10 @@ d3.csv("flights-3m.json").then(function(flights) {
           .text(function(d) { return formatDate(d.values[0].date); })
         .merge(date);
 
+      date.exit().remove();
 
       var flight = date.order().selectAll(".flight")
           .data(function(d) { return d.values; }, function(d) { return d.index; });
-
-      flight.exit().remove();
 
       var flightEnter = flight.enter().append("div")
           .attr("class", "flight");
@@ -352,6 +349,8 @@ d3.csv("flights-3m.json").then(function(flights) {
           .text(function(d) { return formatChange(d.delay) + " min."; });
 
       flightEnter.merge(flight);
+
+      flight.exit().remove();
 
       flight.order();
     });
